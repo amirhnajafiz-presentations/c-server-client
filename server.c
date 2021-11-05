@@ -24,6 +24,7 @@ Server responses:
 // 
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 // Thread library
 #include <pthread.h>
 
@@ -70,9 +71,11 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    clock_t begin = clock();
     printf("Accepted client %s:%d id:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port), client_socket);
 
     char buffer[1024] = {0};
+    char response[1024] = {0};
 
     while (1)
     {
@@ -91,10 +94,14 @@ int main(int argc, char const *argv[])
             break;
         }
 
-        send(client_socket, "Got your message", sizeof(buffer), 0);
+        double time_spent = (double)(clock() - begin) / CLOCKS_PER_SEC;
+        sprintf(response, sizeof(response), "Online time %f", time_spent * 1000);
+
+        send(client_socket, response, sizeof(response), 0);
 
         fflush(stdout);
         buffer[0] = '\0';
+        response[0] = '\0';
     }
     
     return 0;
