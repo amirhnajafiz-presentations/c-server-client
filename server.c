@@ -72,5 +72,26 @@ int main(int argc, char const *argv[])
 
     printf("Accepted client %s:%d id:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port), client_socket);
 
+    char buffer[1024] = {0};
+    int valread;
+
+    while (1)
+    {
+        valread = read(client_socket, buffer, sizeof(buffer));
+        if (valread < 0)
+        {
+            perror("Empty read.");
+            exit(EXIT_FAILURE);
+        }
+
+        buffer[valread] = '\0';
+
+        send(client_socket, "Got your message.", sizeof(buffer), 0);
+
+        fflush(stdout);
+        buffer[0] = '\0';
+    }
+    
+
     return 0;
 }
