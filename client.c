@@ -22,7 +22,7 @@ Every client can do the following commands:
 
 int main(int argc, char const *argv[])
 {
-    int sock = 0, valread;
+    int sock = 0;
     struct sockaddr_in serv_addr;
 
     // TODO: How does socket create?
@@ -53,5 +53,34 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    // User commands
+    int valread;
+    char buffer[1024] = {0};
+    char command[50];
+
+    while (1)
+    {
+        printf("> ");
+        gets(command);
+
+        send(sock, command, strlen(command), 0);
+
+        if (strcmp(command, "stop") == 0)
+        {
+            printf("Disconnected.\n");
+            break;
+        }
+
+        valread = read(sock, buffer, sizeof(buffer));
+
+        if (valread < 0)
+        {
+            perror("Reading failed.");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("< %s\n", buffer);
+    }
+    
     return 0;
 }

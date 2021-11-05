@@ -92,6 +92,5 @@ int main(int argc, char const *argv[])
         buffer[0] = '\0';
     }
     
-
     return 0;
 }
