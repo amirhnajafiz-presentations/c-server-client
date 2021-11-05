@@ -35,7 +35,7 @@ int main(int argc, char const *argv[])
     server_fd = socket(AF_INET, SOCK_STREAM, 0); // TODO: What is this do
     if (server_fd == 0)
     {
-        perror("Socket faild.");
+        perror("Socket faild");
         exit(EXIT_FAILURE);
     }
 
@@ -49,14 +49,14 @@ int main(int argc, char const *argv[])
     // TODO: What is binding??
     if (bind(server_fd, (struct sockaddr *)&address, addrlen) < 0)
     {
-        perror("Bind failed.");
+        perror("Bind failed");
         exit(EXIT_FAILURE);
     }
 
     // TODO: What is backlog?
     if (listen(server_fd, 3) < 0)
     {
-        perror("Listen faild.");
+        perror("Listen faild");
         exit(EXIT_FAILURE);
     }
 
@@ -66,27 +66,32 @@ int main(int argc, char const *argv[])
     int client_socket, valread;
     if ((client_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
     {
-        perror("Accept faild.");
+        perror("Accept faild");
         exit(EXIT_FAILURE);
     }
 
     printf("Accepted client %s:%d id:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port), client_socket);
 
     char buffer[1024] = {0};
-    int valread;
 
     while (1)
     {
         valread = read(client_socket, buffer, sizeof(buffer));
         if (valread < 0)
         {
-            perror("Empty read.");
+            perror("Empty read");
             exit(EXIT_FAILURE);
         }
 
         buffer[valread] = '\0';
 
-        send(client_socket, "Got your message.", sizeof(buffer), 0);
+        if (strcmp(buffer, "stop") == 0)
+        {
+            printf("Client %d: disconnected\n", client_socket);
+            break;
+        }
+
+        send(client_socket, "Got your message", sizeof(buffer), 0);
 
         fflush(stdout);
         buffer[0] = '\0';

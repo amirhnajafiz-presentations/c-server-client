@@ -28,7 +28,7 @@ int main(int argc, char const *argv[])
     // TODO: How does socket create?
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        perror("Socket creation error.");
+        perror("Socket creation error");
         exit(EXIT_FAILURE);
     }
 
@@ -42,14 +42,14 @@ int main(int argc, char const *argv[])
     // TODO: Why do we convert IPv4 and IPv6 to binary
     if (inet_pton(AF_INET, argv[1], &serv_addr.sin_addr) <= 0)
     {
-        perror("Invalid address.");
+        perror("Invalid address");
         exit(EXIT_FAILURE);
     }
 
     // Connecting to the server
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     {
-        perror("Connection failed.");
+        perror("Connection failed");
         exit(EXIT_FAILURE);
     }
 
@@ -67,7 +67,7 @@ int main(int argc, char const *argv[])
 
         if (strcmp(command, "stop") == 0)
         {
-            printf("Disconnected.\n");
+            printf("Disconnected\n");
             break;
         }
 
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[])
 
         if (valread < 0)
         {
-            perror("Reading failed.");
+            perror("Reading failed");
             exit(EXIT_FAILURE);
         }
 
