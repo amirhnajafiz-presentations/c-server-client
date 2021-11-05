@@ -95,7 +95,7 @@ int main(int argc, char const *argv[])
         }
 
         double time_spent = (double)(clock() - begin) / CLOCKS_PER_SEC;
-        sprintf(response, sizeof(response), "Online time %f", time_spent * 1000);
+        snprintf(response, sizeof(response), "Online time %f", time_spent * 1000);
 
         send(client_socket, response, sizeof(response), 0);
 
