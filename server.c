@@ -73,7 +73,7 @@ double ping_user(int sock)
     {
         if (users[i].status == -1 && users[i].socket_id == sock)
         {
-            return (double)(clock() - users[i].begin) / CLOCKS_PER_SEC;
+            return (double)(clock() - users[i].begin) / CLOCKS_PER_SEC * 10000;
         }
     }
 }
@@ -109,7 +109,7 @@ void *client_handler(void *vargp)
         else if (strcmp(buffer, "ping") == 0)
         {
             double time_spent = ping_user(client_socket);
-            snprintf(response, sizeof(response), "Pong %d: %fs", client_socket, time_spent * 1000);
+            snprintf(response, sizeof(response), "Pong %d: %fs", client_socket, time_spent);
         } else 
         {
             snprintf(response, sizeof(response), "No such command");
@@ -158,6 +158,11 @@ int main(int argc, char const *argv[])
     }
 
     printf("Listening on %s:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+
+    for (int i = 0; i < CAPACITY; i++)
+    {
+        users[i].status = 1;
+    }
 
     // Accepting client
     while (1)
