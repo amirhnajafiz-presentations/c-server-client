@@ -21,13 +21,53 @@ Server responses:
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-// 
+//
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
 // Thread library
 #include <pthread.h>
 
+void *client_handler(void *vargp)
+{
+    int *temp = (int *)vargp;
+    int client_socket = *temp;
+
+    clock_t begin = clock();
+
+    int valread;
+    char buffer[1024] = {0};
+    char response[1024] = {0};
+
+    while (1)
+    {
+        valread = read(client_socket, buffer, sizeof(buffer));
+        if (valread < 0)
+        {
+            perror("Empty read");
+            exit(EXIT_FAILURE);
+        }
+
+        buffer[valread] = '\0';
+
+        if (strcmp(buffer, "stop") == 0)
+        {
+            printf("Client %d: disconnected\n", client_socket);
+            break;
+        }
+
+        double time_spent = (double)(clock() - begin) / CLOCKS_PER_SEC;
+        snprintf(response, sizeof(response), "Online time %f", time_spent * 1000);
+
+        send(client_socket, response, sizeof(response), 0);
+
+        fflush(stdout);
+        buffer[0] = '\0';
+        response[0] = '\0';
+    }
+
+    return 0;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -64,45 +104,21 @@ int main(int argc, char const *argv[])
     printf("Listening on %s:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
     // Accepting client
-    int client_socket, valread;
-    if ((client_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
-    {
-        perror("Accept faild");
-        exit(EXIT_FAILURE);
-    }
-
-    clock_t begin = clock();
-    printf("Accepted client %s:%d id:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port), client_socket);
-
-    char buffer[1024] = {0};
-    char response[1024] = {0};
-
     while (1)
     {
-        valread = read(client_socket, buffer, sizeof(buffer));
-        if (valread < 0)
+        int client_socket;
+        if ((client_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
         {
-            perror("Empty read");
+            perror("Accept faild");
             exit(EXIT_FAILURE);
         }
 
-        buffer[valread] = '\0';
+        printf("Accepted client %s:%d id:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port), client_socket);
 
-        if (strcmp(buffer, "stop") == 0)
-        {
-            printf("Client %d: disconnected\n", client_socket);
-            break;
-        }
-
-        double time_spent = (double)(clock() - begin) / CLOCKS_PER_SEC;
-        snprintf(response, sizeof(response), "Online time %f", time_spent * 1000);
-
-        send(client_socket, response, sizeof(response), 0);
-
-        fflush(stdout);
-        buffer[0] = '\0';
-        response[0] = '\0';
+        // Using thread to handle the client
+        pthread_t thread_id;
+        pthread_create(&thread_id, NULL, client_handler, (void *)&client_socket);
     }
-    
+
     return 0;
 }
