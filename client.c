@@ -5,7 +5,7 @@ and send it to the server by socket.
 
 Every client can do the following commands:
     1. Start
-    2. Ping [server] | [user]
+    2. Ping 
     3. Stop
 
 */

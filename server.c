@@ -5,7 +5,7 @@ Using sockets to connect to our server.
 Our server which will accept clients and give response to them.
 Our main input command are: 
     1. Start [name]
-    2. Ping [server] | [user] 
+    2. Ping 
     3. Stop
 Server responses:
     1. Init user
@@ -28,16 +28,66 @@ Server responses:
 // Thread library
 #include <pthread.h>
 
+#define CAPACITY 20
+
+// User struct
+struct user
+{
+    clock_t begin;
+    int status;
+    int socket_id;
+};
+
+// List of users
+struct user users[CAPACITY];
+
+void create_online_user(int sock)
+{
+    for (int i = 0; i < CAPACITY; i++)
+    {
+        if (users[i].status == 1)
+        {
+            users[i].begin = clock();
+            users[i].status = -1;
+            users[i].socket_id = sock;
+            return;
+        }
+    }
+}
+
+void remove_online_user(int sock)
+{
+    for (int i = 0; i < CAPACITY; i++)
+    {
+        if (users[i].status == -1 && users[i].socket_id == sock)
+        {
+            users[i].status = 1;
+            return;
+        }
+    }
+}
+
+double ping_user(int sock)
+{
+    for (int i = 0; i < CAPACITY; i++)
+    {
+        if (users[i].status == -1 && users[i].socket_id == sock)
+        {
+            return (double)(clock() - users[i].begin) / CLOCKS_PER_SEC;
+        }
+    }
+}
+
 void *client_handler(void *vargp)
 {
     int *temp = (int *)vargp;
     int client_socket = *temp;
 
-    clock_t begin = clock();
-
     int valread;
     char buffer[1024] = {0};
     char response[1024] = {0};
+
+    create_online_user(client_socket);
 
     while (1)
     {
@@ -52,12 +102,18 @@ void *client_handler(void *vargp)
 
         if (strcmp(buffer, "stop") == 0)
         {
+            remove_online_user(client_socket);
             printf("Client %d: disconnected\n", client_socket);
             break;
         }
-
-        double time_spent = (double)(clock() - begin) / CLOCKS_PER_SEC;
-        snprintf(response, sizeof(response), "Online time %f", time_spent * 1000);
+        else if (strcmp(buffer, "ping") == 0)
+        {
+            double time_spent = ping_user(client_socket);
+            snprintf(response, sizeof(response), "Pong %d: %fs", client_socket, time_spent * 1000);
+        } else 
+        {
+            snprintf(response, sizeof(response), "No such command");
+        }
 
         send(client_socket, response, sizeof(response), 0);
 
