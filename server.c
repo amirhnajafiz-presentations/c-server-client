@@ -28,7 +28,9 @@ Server responses:
 // Thread library
 #include <pthread.h>
 
+
 #define CAPACITY 20
+
 
 // User struct
 struct user
@@ -40,6 +42,7 @@ struct user
 
 // List of users
 struct user users[CAPACITY];
+
 
 void create_online_user(int sock)
 {
@@ -55,6 +58,7 @@ void create_online_user(int sock)
     }
 }
 
+
 void remove_online_user(int sock)
 {
     for (int i = 0; i < CAPACITY; i++)
@@ -67,6 +71,7 @@ void remove_online_user(int sock)
     }
 }
 
+
 double ping_user(int sock)
 {
     for (int i = 0; i < CAPACITY; i++)
@@ -77,6 +82,7 @@ double ping_user(int sock)
         }
     }
 }
+
 
 void *client_handler(void *vargp)
 {
@@ -121,9 +127,8 @@ void *client_handler(void *vargp)
         buffer[0] = '\0';
         response[0] = '\0';
     }
-
-    return 0;
 }
+
 
 int main(int argc, char const *argv[])
 {
@@ -159,6 +164,7 @@ int main(int argc, char const *argv[])
 
     printf("Listening on %s:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
+    // Reseting the users list
     for (int i = 0; i < CAPACITY; i++)
     {
         users[i].status = 1;
