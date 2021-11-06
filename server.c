@@ -29,61 +29,6 @@ Server responses:
 #include <pthread.h>
 
 
-#define CAPACITY 20
-
-
-// User struct
-struct user
-{
-    clock_t begin;
-    int status;
-    int socket_id;
-};
-
-// List of users
-struct user users[CAPACITY];
-
-
-void create_online_user(int sock)
-{
-    for (int i = 0; i < CAPACITY; i++)
-    {
-        if (users[i].status == 1)
-        {
-            users[i].begin = clock();
-            users[i].status = -1;
-            users[i].socket_id = sock;
-            return;
-        }
-    }
-}
-
-
-void remove_online_user(int sock)
-{
-    for (int i = 0; i < CAPACITY; i++)
-    {
-        if (users[i].status == -1 && users[i].socket_id == sock)
-        {
-            users[i].status = 1;
-            return;
-        }
-    }
-}
-
-
-double ping_user(int sock)
-{
-    for (int i = 0; i < CAPACITY; i++)
-    {
-        if (users[i].status == -1 && users[i].socket_id == sock)
-        {
-            return (double)(clock() - users[i].begin) / CLOCKS_PER_SEC * 10000;
-        }
-    }
-}
-
-
 void *client_handler(void *vargp)
 {
     int *temp = (int *)vargp;
@@ -93,7 +38,7 @@ void *client_handler(void *vargp)
     char buffer[1024] = {0};
     char response[1024] = {0};
 
-    create_online_user(client_socket);
+    clock_t begin = clock();
 
     while (1)
     {
@@ -108,27 +53,25 @@ void *client_handler(void *vargp)
 
         if (strcmp(buffer, "stop") == 0)
         {
-            remove_online_user(client_socket);
             printf("Client %d: disconnected\n", client_socket);
             break;
         }
-        else if (strcmp(buffer, "ping") == 0)
-        {
-            double time_spent = ping_user(client_socket);
-            snprintf(response, sizeof(response), "Pong %d: %fs", client_socket, time_spent);
-        } else 
-        {
-            snprintf(response, sizeof(response), "No such command");
-        }
+
+        time_t mytime = time(NULL);
+        char * time_str = ctime(&mytime);
+        time_str[strlen(time_str)-1] = '\0';
+
+        double time_spent = (double)(clock() - begin) / CLOCKS_PER_SEC * 1000;
+        snprintf(response, sizeof(response), "%s Pong %d: %fs", time_str, client_socket, time_spent);
 
         send(client_socket, response, sizeof(response), 0);
+        printf("%s: User %d\n", time_str, client_socket);
 
         fflush(stdout);
         buffer[0] = '\0';
         response[0] = '\0';
     }
 }
-
 
 int main(int argc, char const *argv[])
 {
@@ -163,12 +106,6 @@ int main(int argc, char const *argv[])
     }
 
     printf("Listening on %s:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-
-    // Reseting the users list
-    for (int i = 0; i < CAPACITY; i++)
-    {
-        users[i].status = 1;
-    }
 
     // Accepting client
     while (1)
